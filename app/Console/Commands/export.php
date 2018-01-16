@@ -38,23 +38,13 @@ class Export extends Command
      */
     public function handle()
     {
-    //   if($this->argument('type'))
-    //   {
-    //     $collection = Route::getRoutes();
-    //     $path = base_path('routes/'. $this->argument('type') . '.php');
-    //     $routes = [];
-    //     foreach ($collection as $item) {
-    //       if($item->middleware()[0] == $this->argument('type'))
-    //       {
-    //         array_push($routes, [
-    //           "name" => $item->uri(),
-    //           "method" => $item->methods[0],
-    //           "controller" => $item->getActionName(),
-    //           "type" => $item->middleware()[0]
-    //         ]);
-    //     }
-    //   }
-    //   var_dump($routes);
-    // }
-  }
+      $result = $this->match('Route::get(abcde),function(');
+      var_dump($result);
+    }
+
+    public function match($string)
+    {
+      preg_match_all("/Route::[\w]+\([\w]+\)\,[\w\s]+[\w\s]\(/", $string, $base);
+      return $base[0];
+    }
 }
