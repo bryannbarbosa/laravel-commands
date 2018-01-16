@@ -1,0 +1,167 @@
+<?php
+
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Route;
+
+class Export extends Command
+{
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'exports {type}';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Export all API Routes with required parameters in a JSON File';
+
+    /**
+     * Create a new command instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
+    /**
+     * Execute the console command.
+     *
+     * @return mixed
+     */
+    public function handle()
+    {
+      if($this->argument('type'))
+      {
+        $collection = Route::getRoutes();
+        $content = null;
+        $params = null;
+        $path = base_path('routes/'. $this->argument('type') . '.php');
+        $routes = [];
+        foreach ($collection as $item) {
+          if($item->middleware()[0] == $this->argument('type'))
+          {
+            if($item->getActionName() == 'Closure')
+            {
+              $content = $this->open($path);
+              $content = $this->clear($content);
+              $content = $this->between('Route', ';', $content);
+              // foreach($content as $cont)
+              // {
+              //     $cont = $this->between('function', '{', $cont);
+              //     var_dump($cont);
+              //     //   if($this->contains($cont, 'Response'))
+              //     //   {
+              //     //     $content = $this->between('Request', ',', $cont);
+              //     //     $content = trim($cont, '()');
+              //     //     $content = trim($content, '$');
+              //     //   }
+              //     //   else {
+              //     //     $content = $this->between('Request', '{', $cont);
+              //     //     $content = trim($cont, '()');
+              //     //     $content = trim($con, '$');
+              //     // }
+              // }
+              for($i = 0; $i < count($content); $i++) {
+                $result = $this->between('function', '{', $content[$i]);
+                $content[$i] = $result[0];
+                if($this->contains($content[$i], 'Response'))
+                {
+                  $variable = $this->between('Request', ',', $content[$i]);
+                  $content[$i] = trim($variable[0], '()');
+                  $content[$i] = trim($variable[0], '$');
+                  $content[$i] = trim($content[$i]);
+                  $content[$i] = substr($content[$i], 1);
+                }
+                else {
+                  $variable = $this->between('Request', '{', $content[$i]);
+                  $content[$i] = trim($variable[0], '()');
+                  $content[$i] = trim($variable[0], '$');
+                  $content[$i] = trim($content[$i]);
+                  $content[$i] = substr($content[$i], 1);
+                }
+                // $complete = $this->open($path);
+                // $complete = $this->clear($complete);
+                // $params = $this->between('Router', '}', $complete);
+                // var_dump($params);
+
+                //$params = $this->between($content[$i], ';', $params[0]);
+                // $count = 0;
+                // foreach($params as $param)
+                // {
+                //   $params[$count] = substr($param, 2, -2);
+                //   $count++;
+                // }
+
+              }
+              $content = $content[0];
+              $complete = $this->open($path);
+              $complete = $this->clear($complete);
+              $params = $this->between('Route', '}', $complete);
+              $params = $this->between('req->', ';', $params[0]);
+              var_dump($params);
+              //$params = $this->between($content[0], ';', $params[0]);
+              // $count = 0;
+              // foreach($params as $param)
+              // {
+              //   $params[$count] = substr($param, 2, -2);
+              //   $count++;
+              // }
+            }
+            array_push($routes, [
+              "name" => $item->uri(),
+              "method" => $item->methods[0],
+              "controller" => $item->getActionName(),
+              "type" => $item->middleware()[0],
+              "variable" => $content[0],
+              "params" => $params
+            ]);
+          }
+        }
+      //   foreach($routes as $route) {
+      //     var_dump($route);
+      //   }
+      }
+    }
+
+    public function between($start, $end, $string)
+    {
+      preg_match_all("/${start}(.*?)${end}/s", $string, $array);
+      return $array[1];
+    }
+
+    public function contains($string, $word)
+    {
+      $bool = strpos($string, $word);
+      return $bool;
+    }
+
+    public function clear($string)
+    {
+      preg_match_all("~(?:#|//)[^\r\n]*|/\*.*?\*/~s", $string, $comments);
+      foreach($comments as $comment)
+      {
+        $string = str_replace($comment, '', $string);
+      }
+      return $string;
+
+    }
+
+    public function open($file)
+    {
+      return file_get_contents($file);
+    }
+
+    public function after($string, $word)
+    {
+      $result = substr($string, strpos($string, $word));
+      return $result;
+    }
+}
