@@ -29,11 +29,12 @@ use Illuminate\Http\Response;
 
 # Exemplo 4
 
-Route::get('/',function(Request $req, Response $response) {
+Route::get('/first',function(Request $req, Response $response) {
     return view('welcome');
-    $req->get('name');
+    $req->get(name);
 });
 
-Route::get('/', function (Request $req2, Response $response) {
+Route::get('/last', function (Request $req2, Response $response) {
     return view('welcome');
+    $req2->get(name);
 });
