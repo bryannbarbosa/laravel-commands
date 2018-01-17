@@ -29,7 +29,7 @@ use Illuminate\Http\Response;
 
 # Exemplo 4
 
-Route::get('/', function (Request $req, Response $response) {
+Route::get('/',function(Request $req, Response $response) {
     return view('welcome');
     $req->get('name');
 });

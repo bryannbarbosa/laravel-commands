@@ -20,6 +20,7 @@ class Export extends Command
      * @var string
      */
     protected $description = 'Export all API Routes with required parameters in a JSON File';
+    protected $path;
 
     /**
      * Create a new command instance.
@@ -29,6 +30,7 @@ class Export extends Command
     public function __construct()
     {
         parent::__construct();
+
     }
 
     /**
@@ -38,13 +40,29 @@ class Export extends Command
      */
     public function handle()
     {
-      $result = $this->match('Route::get(abcde),function(');
+      $type = $this->argument('type');
+      $path = base_path("routes/${type}.php");
+      $content = $this->open($path);
+      $result = $this->getRequest($content);
       var_dump($result);
     }
 
-    public function match($string)
+    public function getRequest($string)
     {
-      preg_match_all("/Route::[\w]+\([\w]+\)\,[\w\s]+[\w\s]\(/", $string, $base);
-      return $base[0];
+      $requests = [];
+      preg_match_all("/Request[\s][$][\w]+/", $string, $base);
+
+      for($i = 0; $i < count($base[0]); $i++)
+      {
+        preg_match_all("/[$][\w]+/", $base[0][$i], $array);
+        $requests[$i] = $array[0][0];
+      }
+      return $requests;
+    }
+
+    public function open($file)
+    {
+      $content = file_get_contents($file);
+      return $content;
     }
 }
